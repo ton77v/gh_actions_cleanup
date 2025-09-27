@@ -1,3 +1,5 @@
+name: Experimenting with GH Action runners space clean-up
+
 on:
   push:
     branches: [main, master]
