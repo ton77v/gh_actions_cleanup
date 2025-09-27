@@ -1,0 +1,68 @@
+on:
+  push:
+    branches: [main, master]
+
+  pull_request:
+    branches:
+      - '*'
+
+jobs:
+
+  general_cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo Content
+        uses: actions/checkout@v4
+
+      - name: Check disk space
+        run: df -h
+
+      #      # FREES 5GB @ FS /dev/root
+      #      - name: Delete huge unnecessary tools folder
+      #        run: rm -rf /opt/hostedtoolcache
+
+      # FREES 7GB @ FS /dev/root
+      - name: Delete huge unnecessary folders
+        run: |
+          cd /opt
+          find . -maxdepth 1 -mindepth 1 '!' -path ./containerd '!' -path ./actionarchivecache '!' -path ./runner '!' -path ./runner-cache -exec rm -rf '{}' ';'
+
+      - name: Check disk space
+        run: df -h
+
+      # about 1GB @ FS /dev/root
+      - name: Extra clean-up
+        run: |
+          sudo apt-get clean
+          sudo rm -rf /var/lib/apt/lists/*
+          rm -rf ~/.conda/pkgs/*
+
+      - name: Check disk space
+        run: df -h
+
+      # ...
+      - name: Docker prune
+        run: docker builder prune -af || true
+
+      - name: Check disk space
+        run: df -h
+
+  cypress_special:  # we can't use the same algorithm as usually because it deletes browsers
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo Content
+        uses: actions/checkout@v4
+
+      - name: Check disk space
+        run: df -h
+
+      - name: Free disk space before Cypress build
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /opt/hostedtoolcache
+          docker builder prune -af || true
+
+      - name: Check disk space
+        run: df -h
