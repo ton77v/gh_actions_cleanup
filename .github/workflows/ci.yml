@@ -24,6 +24,7 @@ jobs:
       #        run: rm -rf /opt/hostedtoolcache
 
       # FREES 7GB @ FS /dev/root
+      # https://github.com/orgs/community/discussions/25678#discussioncomment-9017167
       - name: Delete huge unnecessary folders
         run: |
           cd /opt
