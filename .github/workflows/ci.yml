@@ -8,7 +8,7 @@ on:
 
 jobs:
 
-  mid_cleanup:  # original way that deletes ~8Gb including browsers... MID comparing to below
+  mid_cleanup:  # original way that deletes ~8Gb including browsers... MID comparing to the ones below
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repo Content
@@ -91,7 +91,7 @@ jobs:
       - name: Check disk space
         run: df -h
 
-      # ...
+      # extra +3GB @ dev root
       - name: Sweep /opt keeping runner internals
         run: |
           cd /opt
@@ -105,7 +105,7 @@ jobs:
       - name: Check disk space
         run: df -h
 
-      # ...
+      # in this case 0 but could be A LOT when installing smth & running containers
       - name: Clean package managers & Docker prune
         run: |
           sudo apt-get clean
