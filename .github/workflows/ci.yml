@@ -8,7 +8,7 @@ on:
 
 jobs:
 
-  general_cleanup:
+  mid_cleanup:  # original way that deletes ~8Gb including browsers... MID comparing to below
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repo Content
@@ -40,7 +40,7 @@ jobs:
       - name: Check disk space
         run: df -h
 
-      # ...
+      # could free 0 if you never run docker before e.g. like here
       - name: Docker prune
         run: docker builder prune -af || true
 
@@ -56,12 +56,61 @@ jobs:
       - name: Check disk space
         run: df -h
 
-      - name: Free disk space before Cypress build
+      # frees up 18GB @ dev root totally 📝 docker prune is safe to use when cache-to GBA
+      # Dotnet, Android ones, Haskel (ghc) + old Node/Go/Ruby/Python "hostedtoolcache"
+      - name: Remove huge language stacks
         run: |
           sudo rm -rf /usr/share/dotnet
           sudo rm -rf /opt/ghc
           sudo rm -rf /usr/local/lib/android
           sudo rm -rf /opt/hostedtoolcache
+          docker builder prune -af || true
+
+      - name: Check disk space
+        run: df -h
+
+  agressive_cleanup:  # as an alternative to CYPRESS SPECIAL but more aggressive
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo Content
+        uses: actions/checkout@v4
+
+      - name: Check disk space
+        run: df -h
+
+      # frees up 18GB @ dev root totally 📝 docker prune is safe to use when cache-to GBA
+      # Dotnet, Android ones, Haskel (ghc) + old Node/Go/Ruby/Python "hostedtoolcache"
+      - name: Remove huge language stacks
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /opt/hostedtoolcache
+          docker builder prune -af || true
+
+      - name: Check disk space
+        run: df -h
+
+      # ...
+      - name: Sweep /opt keeping runner internals
+        run: |
+          cd /opt
+          sudo find . -maxdepth 1 -mindepth 1 \
+          ! -path ./containerd \
+          ! -path ./actionarchivecache \
+          ! -path ./runner \
+          ! -path ./runner-cache \
+          -exec rm -rf {} +
+
+      - name: Check disk space
+        run: df -h
+
+      # ...
+      - name: Clean package managers & Docker prune
+        run: |
+          sudo apt-get clean
+          sudo rm -rf /var/lib/apt/lists/*
+          rm -rf ~/.conda/pkgs/* || true
           docker builder prune -af || true
 
       - name: Check disk space
